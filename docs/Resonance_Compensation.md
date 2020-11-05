@@ -53,8 +53,8 @@ $ git remote -v
 ```
 The output should list the new remote among other things:
 ```
-s-curve-exp	https://github.com/dmbutyugin/klipper.git (fetch)
-s-curve-exp	https://github.com/dmbutyugin/klipper.git (push)
+s-curve-exp https://github.com/dmbutyugin/klipper.git (fetch)
+s-curve-exp https://github.com/dmbutyugin/klipper.git (push)
 ```
 
 Now check the current branch, it will be needed to roll back after you are

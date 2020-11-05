@@ -290,7 +290,8 @@ moveq_add(struct moveq *mq, double move_d
     m->smooth_delta_v2 = 2. * smoothed_accel * move_d;
 
     if (!list_empty(&mq->moves)) {
-        struct qmove *prev_move = list_last_entry(&mq->moves, struct qmove, node);
+        struct qmove *prev_move = list_last_entry(
+                &mq->moves, struct qmove, node);
         m->max_smoothed_v2 =
             prev_move->max_smoothed_v2 + prev_move->smooth_delta_v2;
         m->max_smoothed_v2 = MIN(
@@ -358,7 +359,8 @@ moveq_getmove(struct moveq *mq, struct move_accel_decel *accel_decel)
             , start_v*start_v, move->cruise_v*move->cruise_v, end_v*end_v
             , move->move_d, move->max_cruise_v2, move->junction_max_v2
             , accel_decel->effective_accel, accel_decel->effective_decel
-            , accel_decel->accel_t, accel_decel->cruise_t, accel_decel->decel_t);
+            , accel_decel->accel_t, accel_decel->cruise_t
+            , accel_decel->decel_t);
     ++move_idx;
     #endif
     if (accel_decel->cruise_t < -EPSILON) {

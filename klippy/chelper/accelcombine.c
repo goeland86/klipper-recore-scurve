@@ -186,7 +186,8 @@ find_fallback_decel(struct accel_combiner *ac, struct qmove *move
         if (max_end_v2 <= safe_end_v2 + EPSILON) {
             *fallback_decel = jp->accel;
             fallback_decel->max_end_v2 = safe_end_v2;
-            set_max_start_v2(fallback_decel, jp->accel.start_accel->max_start_v2);
+            set_max_start_v2(
+                    fallback_decel, jp->accel.start_accel->max_start_v2);
             // Point to the real accel_group instance.
             fallback_decel->start_accel = jp->move_ag;
             fallback_decel->move = move;

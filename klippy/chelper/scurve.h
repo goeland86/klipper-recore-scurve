@@ -11,9 +11,12 @@ double scurve_velocity(const struct scurve *s, double time);
 double scurve_tn_antiderivative(const struct scurve *s, int n, double time);
 
 void scurve_offset(struct scurve *s, double offset_t);
-void scurve_copy_scaled(const struct scurve *src, double ratio, struct scurve *dst);
-double scurve_add_deriv(const struct scurve *src, double ratio, struct scurve *dst);
-double scurve_add_2nd_deriv(const struct scurve *src, double ratio, struct scurve *dst);
+void scurve_copy_scaled(const struct scurve *src, double ratio
+        , struct scurve *dst);
+double scurve_add_deriv(const struct scurve *src, double ratio
+        , struct scurve *dst);
+double scurve_add_2nd_deriv(const struct scurve *src, double ratio
+        , struct scurve *dst);
 void scurve_fill(struct scurve *s, int accel_order
         , double accel_t, double accel_offset_t, double total_accel_t
         , double start_accel_v, double effective_accel);
