@@ -53,13 +53,14 @@ extruder_integrate_time(double extrude_pos, const struct scurve *s
 
 // Calculate the definitive integral of extruder for a given move
 static double
-pa_move_integrate(struct move *m, double start, double end, double time_offset)
+pa_move_integrate(struct move *m, double base, double start, double end,
+                  double time_offset)
 {
     if (start < 0.)
         start = 0.;
     if (end > m->move_t)
         end = m->move_t;
-    double extrude_pos = m->start_pos.x;
+    double extrude_pos = base;
     double extrude_r = m->axes_r.x;
     double pressure_advance = m->axes_r.y;
     struct scurve s;
@@ -76,20 +77,23 @@ pa_range_integrate(struct move *m, double move_time, double hst)
 {
     // Calculate integral for the current move
     double res = 0., start = move_time - hst, end = move_time + hst;
-    res += pa_move_integrate(m, start, move_time, start);
-    res -= pa_move_integrate(m, move_time, end, end);
+    double start_base = m->start_pos.x;
+    res += pa_move_integrate(m, 0., start, move_time, start);
+    res -= pa_move_integrate(m, 0., move_time, end, end);
     // Integrate over previous moves
     struct move *prev = m;
     while (unlikely(start < 0.)) {
         prev = list_prev_entry(prev, node);
         start += prev->move_t;
-        res += pa_move_integrate(prev, start, prev->move_t, start);
+        double base = prev->start_pos.x - start_base;
+        res += pa_move_integrate(prev, base, start, prev->move_t, start);
     }
     // Integrate over future moves
     while (unlikely(end > m->move_t)) {
         end -= m->move_t;
         m = list_next_entry(m, node);
-        res -= pa_move_integrate(m, 0., end, end);
+        double base = m->start_pos.x - start_base;
+        res -= pa_move_integrate(m, base, 0., end, end);
     }
     return res;
 }
@@ -110,7 +114,7 @@ extruder_calc_position(struct stepper_kinematics *sk, struct move *m
         return m->start_pos.x + m->axes_r.x * move_get_distance(m, move_time);
     // Apply pressure advance and average over smooth_time
     double area = pa_range_integrate(m, move_time, hst);
-    return area * es->inv_half_smooth_time2;
+    return m->start_pos.x + area * es->inv_half_smooth_time2;
 }
 
 void __visible
