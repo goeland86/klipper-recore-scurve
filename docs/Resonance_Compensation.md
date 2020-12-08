@@ -6,8 +6,7 @@ prints: Input Shaping and adaptive S-Curve acceleration. Ringing (also known
 as echoing, ghosting or rippling) is a surface printing defect when, typically,
 elements like edges repeat themselves on a printed surface as a subtle 'echo':
 
-|![Ringing test](img/ringing-test.jpg) |![3D Benchy](img/ringing-3dbenchy.jpg) |
-|:--:|:--:|
+|![Ringing test](img/ringing-test.jpg)|![3D Benchy](img/ringing-3dbenchy.jpg)|
 
 Ringing is caused by mechanical vibrations in the printer due to quick changes
 of the printing direction.
@@ -150,7 +149,6 @@ be done on the mainline Klipper branch before switching to the S-Curve branch.
    or calipers:
 
     |![Mark ringing](img/ringing-mark.jpg)|![Measure ringing](img/ringing-measure.jpg)|
-    |:--:|:--:|
 
 9. Compute the ringing frequency = *V* &middot; *N* / *D* (Hz) where *V* is the
    velocity for outer perimeters (mm/sec). For the example above, we marked 6
