@@ -49,13 +49,10 @@ class Heater:
         # Setup output heater pin
         heater_pin = config.get('heater_pin')
         ppins = self.printer.lookup_object('pins')
-        if algo is ControlBangBang and self.max_power == 1.:
-            self.mcu_pwm = ppins.setup_pin('digital_out', heater_pin)
-        else:
-            self.mcu_pwm = ppins.setup_pin('pwm', heater_pin)
-            pwm_cycle_time = config.getfloat(
-                'pwm_cycle_time', 0.100, above=0., maxval=self.pwm_delay)
-            self.mcu_pwm.setup_cycle_time(pwm_cycle_time)
+        self.mcu_pwm = ppins.setup_pin('pwm', heater_pin)
+        pwm_cycle_time = config.getfloat('pwm_cycle_time', 0.100, above=0.,
+                                         maxval=self.pwm_delay)
+        self.mcu_pwm.setup_cycle_time(pwm_cycle_time)
         self.mcu_pwm.setup_max_duration(MAX_HEAT_TIME)
         # Load additional modules
         self.printer.load_object(config, "verify_heater %s" % (self.name,))
@@ -135,7 +132,9 @@ class Heater:
         with self.lock:
             target_temp = self.target_temp
             smoothed_temp = self.smoothed_temp
-        return {'temperature': smoothed_temp, 'target': target_temp}
+            last_pwm_value = self.last_pwm_value
+        return {'temperature': smoothed_temp, 'target': target_temp,
+                'power': last_pwm_value}
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         temp = gcmd.get_float('TARGET', 0.)
@@ -265,7 +264,8 @@ class PrinterHeaters:
         return self.heaters[heater_name]
     def setup_sensor(self, config):
         modules = ["thermistor", "adc_temperature", "spi_temperature",
-                   "bme280", "htu21d", "lm75", "rpi_temperature"]
+                   "bme280", "htu21d", "lm75", "rpi_temperature",
+                   "temperature_mcu"]
         for module_name in modules:
             self.printer.load_object(config, module_name)
         sensor_type = config.get('sensor_type')
