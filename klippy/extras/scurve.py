@@ -126,8 +126,6 @@ class SCurve:
         # Inject a new move queue
         new_move_queue = AccelCombiningMoveQueue(self, self.toolhead)
         self.toolhead.replace_move_queue(new_move_queue)
-        # Inject new get_max_axis_halt computation
-        default_get_max_axis_halt = self.toolhead.get_max_axis_halt
     def _set_params(self, min_accel, max_jerk):
         mjlt = self.min_jerk_limit_time
         if not max_jerk:
