@@ -1,9 +1,9 @@
 # Resonance Compensation
 
-Klipper supports Input Shaping - a technique that can be used to reduce ringing
-(also known as echoing, ghosting or rippling) in prints. Ringing is a surface
-printing defect when, typically, elements like edges repeat themselves on a
-printed surface as a subtle 'echo':
+Klipper has support of several features that can be used to reduce ringing in
+prints: Input Shaping and adaptive S-Curve acceleration. Ringing (also known
+as echoing, ghosting or rippling) is a surface printing defect when, typically,
+elements like edges repeat themselves on a printed surface as a subtle 'echo':
 
 |![Ringing test](img/ringing-test.jpg)|![3D Benchy](img/ringing-3dbenchy.jpg)|
 
@@ -16,12 +16,87 @@ and fixed first, if possible.
 
 [Input shaping](https://en.wikipedia.org/wiki/Input_shaping) is an open-loop
 control technique which creates a commanding signal that cancels its
-own vibrations. Input shaping requires some tuning and measurements before it
-can be enabled. Besides ringing, Input Shaping typically reduces the vibrations
-and shaking of the printer in general, and may also improve the reliability
-of the stealthChop mode of Trinamic stepper drivers.
+own vibrations. Input shaping and S-Curve acceleration require some tuning and
+measurements before they can be enabled. Besides ringing, Input Shaping
+typically reduces the vibrations and shaking of the printer in general, and may
+also improve the reliability of the stealthChop mode of Trinamic stepper
+drivers.
 
 ## Tuning
+
+Some of the improvements do not come for free: adaptive S-Curve acceleration
+often slows prints down. Depending on the model and print parameters, slow down
+can be from negligible to 20-30% and more. On the other hand, the same level of
+improvements usually cannot be obtained just by reducing the acceleration.
+
+
+Switch to S-Curve acceleration branch
+===========================
+
+Instructions below assume that you have an existing Klipper installation
+from the main repo. If you don't, follow the
+[instructions](https://github.com/KevinOConnor/klipper/blob/master/docs/Installation.md)
+to set up the Klipper from the main repo first.
+
+To try experimental S-Curve acceleration mode in your existing
+Klipper installation, SSH to your Raspberry Pi and run the following commands:
+```
+$ cd klipper
+$ sudo service klipper stop
+```
+
+Configure the new Git remote:
+```
+$ git remote add s-curve-exp https://github.com/dmbutyugin/klipper.git
+$ git remote -v
+```
+The output should list the new remote among other things:
+```
+s-curve-exp https://github.com/dmbutyugin/klipper.git (fetch)
+s-curve-exp https://github.com/dmbutyugin/klipper.git (push)
+```
+
+Now check the current branch, it will be needed to roll back after you are
+finished with the experiments:
+```
+$ git branch
+```
+will most likely list
+```
+* master
+```
+
+Check out the new branch:
+```
+$ git fetch s-curve-exp
+$ git checkout s-curve-exp/scurve-shaping
+```
+
+Start Klipper:
+```
+$ sudo service klipper start
+```
+
+If you want to switch back to the main Klipper branch, SSH to your Raspberry
+Pi and run the following commands:
+```
+$ cd klipper
+$ sudo service klipper stop
+$ git checkout master
+$ sudo service klipper start
+```
+
+## Updating
+
+To update an existing installation to a newer version of the code, run the
+following commands:
+```
+$ cd klipper
+$ sudo service klipper stop
+$ git fetch s-curve-exp
+$ git checkout s-curve-exp/scurve-shaping
+$ sudo service klipper start
+```
 
 Basic tuning requires measuring the ringing frequencies of the printer
 by printing a test model.
@@ -42,8 +117,10 @@ Slice the ringing test model, which can be found in
 
 ### Ringing frequency
 
-First, measure the **ringing frequency**.
+First, measure the **ringing frequency**. Note that these measurements can also
+be done on the mainline Klipper branch before switching to the S-Curve branch.
 
+<<<<<<< HEAD
 1. If `square_corner_velocity` parameter was changed, revert it back
    to 5.0. It is not advised to increase it when using input shaper
    because it can cause more smoothing in parts - it is better to use
@@ -57,6 +134,25 @@ First, measure the **ringing frequency**.
    continue with the measurements.
 5. Execute the command:
    `TUNING_TOWER COMMAND=SET_VELOCITY_LIMIT PARAMETER=ACCEL START=1500 STEP_DELTA=500 STEP_HEIGHT=5`
+=======
+1. Increase `max_accel` and `max_accel_to_decel` parameters in your
+   `printer.cfg` to 7000. Note that this is only needed for tuning, and more
+   proper value will be selected in the corresponding
+   [section](#selecting-max_accel).
+2. If `square_corner_velocity` parameter was changed, revert it back to 5.0.
+   It is not advised to increase it when using the input shaper because it can
+   cause more smoothing in parts - it is better to use higher acceleration
+   value instead.
+3. Restart the firmware: `RESTART`.
+4. Disable Pressure Advance: `SET_PRESSURE_ADVANCE ADVANCE=0`.
+5. If you have already switched to the S-Curve branch and updated the config,
+   execute `SET_SCURVE ACCEL_ORDER=2 MIN_ACCEL=7000` and
+   `SET_INPUT_SHAPER SHAPER_FREQ_X=0 SHAPER_FREQ_Y=0` commands. If you get
+   "Unknown command" errors for any of these commands, you can safely ignore
+   them at this point and continue with the measurements.
+6. Execute the command
+   `TUNING_TOWER COMMAND=SET_VELOCITY_LIMIT PARAMETER=ACCEL START=1250 FACTOR=100 BAND=5`.
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
    Basically, we try to make ringing more pronounced by setting different large
    values for acceleration. This command will increase the acceleration every
    5 mm starting from 1500 mm/sec^2: 1500 mm/sec^2, 2000 mm/sec^2, 2500 mm/sec^2
@@ -148,12 +244,21 @@ a few other related parameters.
 
 Print the ringing test model as follows:
 
+<<<<<<< HEAD
 1. Restart the firmware: `RESTART`
 2. Prepare for test: `SET_VELOCITY_LIMIT ACCEL_TO_DECEL=7000`
 3. Disable Pressure Advance: `SET_PRESSURE_ADVANCE ADVANCE=0`
 4. Execute: `SET_INPUT_SHAPER SHAPER_TYPE=MZV`
 5. Execute the command:
    `TUNING_TOWER COMMAND=SET_VELOCITY_LIMIT PARAMETER=ACCEL START=1500 STEP_DELTA=500 STEP_HEIGHT=5`
+=======
+1. Restart the firmware: `RESTART`.
+2. Disable Pressure Advance: `SET_PRESSURE_ADVANCE ADVANCE=0`.
+3. Execute `SET_SCURVE ACCEL_ORDER=2 MIN_ACCEL=7000` (ignore any errors).
+4. Execute `SET_INPUT_SHAPER SHAPER_TYPE=MZV`.
+5. Execute the command
+   `TUNING_TOWER COMMAND=SET_VELOCITY_LIMIT PARAMETER=ACCEL START=1250 FACTOR=100 BAND=5`.
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
 6. Print the test model sliced with the suggested parameters.
 
 If you see no ringing at this point, then MZV shaper can be recommended for use.
@@ -256,6 +361,22 @@ Hz), it might be a good idea to increase the printer stiffness or reduce the
 moving mass. Otherwise, acceleration and printing speed may be limited due too
 much smoothing now instead of ringing.
 
+## S-Curve configuration
+
+If you see no ringing on the test model printed with your chosen input shaper,
+you do not need to configure S-Curve acceleration. If you still see some ringing
+up to and a bit above the max_accel value you chose, you may try S-Curve
+acceleration. Add the following section to printer.cfg file (and restart
+Klipper afterwards):
+```
+[scurve]
+acceleration_order: 4
+min_accel: ...
+```
+
+As `min_accel` choose the value of acceleration from the test model when there is
+still no ringing visible. The tuning is complete.
+
 
 ### Fine-tuning resonance frequencies
 
@@ -275,8 +396,14 @@ parameters, complete the following steps for each of the axes X and Y:
 3. Execute: `SET_INPUT_SHAPER SHAPER_TYPE=ZV`
 4. From the existing ringing test model with your chosen input shaper select
    the acceleration that shows ringing sufficiently well, and set it with:
+<<<<<<< HEAD
    `SET_VELOCITY_LIMIT ACCEL=...`
 5. Calculate the necessary parameters for the `TUNING_TOWER` command to tune
+=======
+   `SET_VELOCITY_LIMIT ACCEL=...` and
+   `SET_SCURVE ACCEL_ORDER=2 MIN_ACCEL=...` (ignore any errors).
+4. Calculate the necessary parameters for the `TUNING_TOWER` command to tune
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
    `shaper_freq_x` parameter as follows: start = shaper_freq_x * 83 / 132 and
    factor = shaper_freq_x / 66, where `shaper_freq_x` here is the current value
    in `printer.cfg`.
@@ -313,7 +440,17 @@ If you use Pressure Advance, it may need to be re-tuned. Follow the
 the new value, if it differs from the previous one. Make sure to
 restart Klipper before tuning Pressure Advance.
 
+<<<<<<< HEAD
 ### Unreliable measurements of ringing frequencies
+=======
+If later during printing you notice that extruder rattles or skip steps, it
+means that the pressure advance value is too high for the corresponding
+acceleration. You can either reduce `max_accel` setting, or reduce `min_accel`
+value in `[scurve]` section.
+
+
+## Unreliable measurements of ringing frequencies
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
 
 If you are unable to measure the ringing frequencies, e.g. if the distance
 between the oscillations is not stable, you may still be able to take advantage
@@ -325,10 +462,18 @@ accelerometer and measure the resonances with it (refer to the
 process) - but this option requires some crimping and soldering.
 
 
+<<<<<<< HEAD
 For tuning, add empty `[input_shaper]` section to your
 `printer.cfg`. Then, assuming that you have sliced the ringing model
 with suggested parameters, print the test model 3 times as
 follows. First time, prior to printing, run
+=======
+For tuning, add empty `[input_shaper]` section to your `printer.cfg` (do not add
+`[scurve]` section yet, or remove if you had any). Then, assuming that you have
+sliced the ringing model with suggested parameters and increased `max_accel` and
+`max_accel_to_decel` parameters in the `printer.cfg` to 7000 already, print the
+test model 3 times as follows. First time, prior to printing, run
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
 
 1. `RESTART`
 2. `SET_VELOCITY_LIMIT ACCEL_TO_DECEL=7000`
@@ -431,13 +576,20 @@ SET_INPUT_SHAPER SHAPER_FREQ_X=... SHAPER_FREQ_Y=...
 
 And similarly when switching back to carriage 0.
 
-### Does input_shaper affect print time?
+### Do input_shaper or scurve affect print time?
 
-No, `input_shaper` feature has pretty much no impact on the print times by
+`input_shaper` feature has pretty much no impact on the print times by
 itself. However, the value of `max_accel` certainly does (tuning of this
 parameter described in [this section](#selecting-max_accel)).
 
+<<<<<<< HEAD
 ## Technical details
+=======
+S-Curve adaptive acceleration, on the other hand, does affect the pring time:
+the same print with the same `max_accel`, but with `scurve` enabled will take
+longer to print. However, S-Curve may allow one to set higher `max_accel`
+value, thus reducing the time penalty.
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5
 
 ### Input shapers
 
@@ -470,6 +622,7 @@ so the values for 10% vibration tolerance are provided only for the reference.
 
 **How to use this table:**
 
+<<<<<<< HEAD
 * Shaper duration affects the smoothing in parts - the larger it is, the more
  smooth the parts are. This dependency is not linear, but can give a sense of
  which shapers 'smooth' more for the same frequency. The ordering by
@@ -497,3 +650,135 @@ so the values for 10% vibration tolerance are provided only for the reference.
  enough information. In this case one may have more luck with
  [scripts/graph_shaper.py](../scripts/graph_shaper.py)
  script, which is more flexible.
+=======
+  * Shaper duration affects the smoothing in parts - the larger it is, the more
+    smooth the parts are. This dependency is not linear, but can give a sense of
+    which shapers 'smooth' more for the same frequency. The ordering by
+    smoothing is like this: ZV < MZV < ZVD ≈ EI < 2HUMP_EI < 3HUMP_EI. Also,
+    it is rarely practical to set shaper_freq = resonance freq for shapers
+    2HUMP_EI and 3HUMP_EI (they should be used to reduce vibrations for several
+    frequencies).
+  * One can estimate a range of frequencies in which the shaper reduces
+    vibrations. For example, MZV with shaper_freq = 35 Hz reduces vibrations
+    to 5% for frequencies [33.6, 36.4] Hz. 3HUMP_EI with shaper_freq = 50 Hz
+    reduces vibrations to 5% in range [27.5, 75] Hz.
+  * One can use this table to check which shaper they should be using if they
+    need to reduce vibrations at several frequencies. For example, if one has
+    resonances at 35 Hz and 60 Hz on the same axis: a) EI shaper needs to have
+    shaper_freq = 35 / (1 - 0.2) = 43.75 Hz, and it will reduce resonances
+    until 43.75 * (1 + 0.2) = 52.5 Hz, so it is not sufficient; b) 2HUMP_EI
+    shaper needs to have shaper_freq = 35 / (1 - 0.35) = 53.85 Hz and will
+    reduce vibrations until 53.85 * (1 + 0.35) = 72.7 Hz - so this is an
+    acceptable configuration. Always try to use as high shaper_freq as possible
+    for a given shaper (perhaps with some safety margin, so in this example
+    shaper_freq ≈ 50-52 Hz would work best), and try to use a shaper with as
+    small shaper duration as possible.
+  * If one needs to reduce vibrations at several very different frequencies
+    (say, 30 Hz and 100 Hz), they may see that the table above does not provide
+    enough information. In this case one may have more luck with
+    [scripts/graph_shaper.py](../scripts/graph_shaper.py)
+    script, which is more flexible.
+
+S-Curve acceleration overview
+=============================
+
+By default, Klipper uses "trapezoid generator" for each move - each move has
+a start speed, it accelerates to a cruising speed at constant acceleration,
+it cruises at a constant speed, and then decelerates to the end speed using
+constant acceleration.
+
+![trapezoid](img/trapezoid.svg.png)
+
+The basic idea behind S-Curve acceleration is to replace the constant
+acceleration and deceleration with polynomials of higher order. For some
+choices of the polynomials the toolhead will travel the same path and reach
+the same speed as if it was accelerating constantly, but higher order
+derivatives (e.g. acceleration, jerk) can be 0 in the beginning and at the end
+of acceleration depending on the polynomial order, ensuring better smoothness
+of the motion.
+
+Klipper currently supports acceleration_order = 2, 4 and 6.
+acceleration_order = 2 is the default constant acceleration mode.
+Charts below show the distance covered, velocity and acceleration for different
+acceleration orders.
+
+|![Distance](img/s-curve-x.svg.png)|
+|:--:|
+| *Distance* |
+|![Velocity](img/s-curve-v.svg.png)|
+| *Velocity* |
+|![Acceleration](img/s-curve-a.svg.png)|
+| *Acceleration* |
+
+Notice that the velocity and acceleration are smoother with higher acceleration
+orders. When acceleration is not constant, the 'lack' of acceleration in
+the beginning must be compensated with higher max acceleration. Klipper still
+plans all moves considering the 'effective' acceleration, which can be seen as
+an average acceleration, but then each move is executed using the polynomial
+of the chosen degree. Though instantaneous acceleration exceeds the configured
+maximum toolhead acceleration, because the movement is smoother overall,
+the reduction of the maximum permitted acceleration is usually not necessary.
+
+Besides making the movements smoother, S-Curve acceleration *may* improve the
+quality of the prints. One of the theories behind it is that each printer has
+limited non-infinite rigidity of the frame, belts, etc. When the force is
+applied or relieved instantly in the beginning and at the end of acceleration
+or deceleration, the system can act as a spring and start oscillating, which
+can be observed in the form of ringing in the prints. S-Curve acceleration
+'spreads' increase and decrease of the force during a longer time, potentially
+reducing the oscillations.
+
+This has an important consequence: if the short moves are executed with the
+same acceleration, the full force must be applied over the shorter period of
+time, effectively nullifying the positive effect of S-Curve acceleration on
+short moves. That's why Klipper also limits the maximum kinematic jerk
+*J* = *da* / *dt* of each acceleration and deceleration in S-Curve acceleration
+mode.
+
+For the chosen polynomials, the maximum kinematic jerk *J* is
+
+*J* = 6 *a* / *T*
+
+for acceleration_order = 4, where *a* is effective acceleration and *T* is
+acceleration time. For acceleration_order = 6
+
+*J* = 10 *a* / (*T* &#8730;3) &asymp; 5.774 *a* / *T*.
+
+In the end, we use 6 *a* / *T* < max_jerk condition to limit the jerk. This
+leads to a cubic equation
+
+(*v*<sup>2</sup> - *v*<sub>0</sub><sup>2</sup>) &times;
+  (*v* + *v*<sub>0</sub>) / 2 = *L*<sup>2</sup> *J* / 3,
+
+which can be solved using Cardano's formula to determine the velocity *v*
+after acceleration with the maximum jerk *J* over the segment of length *L*.
+The final velocity is chosen as a minimum out of that value and
+*v*<sub>0</sub> + (2 *a* *L*)<sup>1/2</sup>.
+
+Another reason to limit the jerk is that it directly translates into extruder
+acceleration *a*<sub>e</sub> if Pressure Advance is enabled:
+*a<sub>e</sub>* = *r P J*,
+where *P* is the pressure advance parameter,
+
+*r* = (4 *w* *h*) / (&pi; *D*<sup>2</sup>).
+
+is the extrusion ratio, *D* is the filament diameter, *w* is the extrusion
+width, *h* is the layer height. As an example, with *P* = 0.5, *w* = 0.4 mm,
+*h* = 0.2 mm, *D* = 1.75 mm, and *J* = 100'000 the extruder acceleration is
+1663 mm/sec^2 due to jerk.
+
+Extruder kinematics looks as follows with different acceleration orders:
+
+|![Velocity](img/s-curve-ev.svg.png)|
+|:--:|
+| *Extruder Velocity* |
+|![Acceleration](img/s-curve-ea.svg.png)|
+| *Extruder Acceleration* |
+
+Notice the velocity jump with acceleration_order = 2 (the 'infinite'
+acceleration spikes at the beginning and the end of acceleration with
+acceleration_order = 2 are not shown). With acceleration_order > 2
+the velocity is continuous, and for acceleration_order = 6 it is even
+smooth.  Thus, acceleration_order > 2 can improve the performance of
+the extruder if pressure advance is enabled.
+>>>>>>> e5e5b4a33ed4a2d9a620ed217f114f2cf88693a5

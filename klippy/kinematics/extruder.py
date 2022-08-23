@@ -255,19 +255,18 @@ class PrinterExtruder:
         return move.max_cruise_v2
     def move(self, print_time, move):
         axis_r = move.axes_r[3]
-        accel = move.accel * axis_r
-        start_v = move.start_v * axis_r
-        cruise_v = move.cruise_v * axis_r
-        can_pressure_advance = False
+        pressure_advance = 0.
         if axis_r > 0. and (move.axes_d[0] or move.axes_d[1]):
-            can_pressure_advance = True
-        # Queue movement (x is extruder movement, y is pressure advance flag)
-        self.trapq_append(self.trapq, print_time,
-                          move.accel_t, move.cruise_t, move.decel_t,
+            pressure_advance = self.pressure_advance
+        # Queue movement (x is extruder movement, y is pressure advance)
+        self.trapq_append(self.trapq, print_time, move.accel_order,
+                          move.accel_t, move.accel_offset_t, move.total_accel_t,
+                          move.cruise_t,
+                          move.decel_t, move.decel_offset_t, move.total_decel_t,
                           move.start_pos[3], 0., 0.,
-                          1., can_pressure_advance, 0.,
-                          start_v, cruise_v, accel)
-        self.last_position = move.end_pos[3]
+                          axis_r, pressure_advance, 0.,
+                          move.start_accel_v, move.cruise_v,
+                          move.effective_accel, move.effective_decel)
     def find_past_position(self, print_time):
         if self.extruder_stepper is None:
             return 0.
