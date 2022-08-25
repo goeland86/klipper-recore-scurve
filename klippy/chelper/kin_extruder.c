@@ -62,7 +62,7 @@ pa_move_integrate(struct move *m, double pressure_advance
         end = m->move_t;
     double extrude_pos = base;
     double extrude_r = m->axes_r.x;
-    double pressure_advance = m->axes_r.y;
+    pressure_advance = m->axes_r.y;
     struct scurve s;
     scurve_copy_scaled(&m->s, extrude_r, &s);
     extrude_pos += scurve_add_deriv(&m->s, extrude_r * pressure_advance, &s);

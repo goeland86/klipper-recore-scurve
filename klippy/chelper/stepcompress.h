@@ -3,6 +3,14 @@
 
 #include <stdint.h> // uint32_t
 
+#define ERROR_RET -989898989
+
+struct pull_history_steps {
+    uint64_t first_clock, last_clock;
+    int64_t start_position;
+    int step_count, interval, add;
+};
+
 struct stepcompress *stepcompress_alloc(uint32_t oid);
 void stepcompress_fill(struct stepcompress *sc, uint32_t max_error
                        , int32_t queue_step_msgtag
