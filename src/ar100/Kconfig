@@ -12,7 +12,7 @@ config AR100_SELECT
 
 config STEP_DELAY
     int
-    default -1
+    default 0
 
 config BOARD_DIRECTORY
     string
