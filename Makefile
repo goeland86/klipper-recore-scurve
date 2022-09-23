@@ -19,7 +19,7 @@ OBJCOPY=$(CROSS_PREFIX)objcopy
 OBJDUMP=$(CROSS_PREFIX)objdump
 STRIP=$(CROSS_PREFIX)strip
 CPP=cpp
-PYTHON=python3
+PYTHON=python2
 
 # Source files
 src-y =
